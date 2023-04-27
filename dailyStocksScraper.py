@@ -4,6 +4,7 @@
 
 import requests, sys
 from pathlib import Path
+from datetime import datetime
 
 print("Enter the symbol(s) for the stocks:")
 print()
@@ -28,10 +29,15 @@ while True:
         print("That address is incorrect. Try again.")
         i += 1
 
+stocksFile = open(address / f"{datetime.today().strftime('%d_%m_%Y')}_stocks.txt", "w")
+stocksFile.write("\t\t", datetime)
+stocksFile.write("\n\n")
+stocksFile.write("\t\tOpen\tHigh\tLow\tAdj")
+
 for symbol in symbols:
     res = requests.get(f"https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1=1651067896&period2=1682603896&interval=1d&events=history&includeAdjustedClose=true")
     res.raise_for_status()
-    stockFile = open(f"{symbol}.csv", "wb")
+    csvFile = open(f"{symbol}.csv", "wb")
     for chunk in res.iter_content(100000):
-        stockFile.write(chunk)
+        csvFile.write(chunk)
     
