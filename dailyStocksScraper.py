@@ -2,9 +2,10 @@
 # dailyStocksScraper.py - Logs the data of any stock details after stock symbols entered 
 # into the command line
 
-import requests, sys, csv, os
+import requests, sys, os
 from pathlib import Path
 from datetime import datetime
+import yfinance as yf
 
 if len(sys.argv) > 1:
     symbols = [i.upper() for i in sys.argv[1:]]
@@ -28,22 +29,15 @@ while True:
         i += 1
 
 stocksFile = open(address / f"{datetime.today().strftime('%d_%m_%Y')}_stocks.txt", "w+")
-stocksFile.write(f"\t\t{datetime}")
+stocksFile.write(f"\t\tDate Accessed - {datetime}")
 stocksFile.write("\n\n")
 
+start_date = datetime(2023, 4, 26)
+
 for symbol in symbols:
-    res = requests.get(f"https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1=1651067896&period2=1682603896&interval=1d&events=history&includeAdjustedClose=true")
-    res.raise_for_status()
-    csvFile = open(f"{symbol}.csv", "wb")
-    for chunk in res.iter_content(100000):
-        csvFile.write(chunk)
-    csvReader = csv.reader(csvFile)
-    csvData = list(csvReader)
     stocksFile.write(f"{symbol} - \n")
-    stocksFile.write("\t".join(csvData[1]))
-    stocksFile.write("\t".join(csvData[-1]))
-    csvData.close()
-    os.remove(f"{symbol}.csv")
+    data = yf.download(symbol, start=start_date)
+    stocksFile.write(f"{data}\n\n")
 
 stocksFile.close()
 print("\nDone.")
