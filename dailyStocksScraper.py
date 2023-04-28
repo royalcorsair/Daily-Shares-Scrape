@@ -6,31 +6,29 @@ import requests, sys, csv, os
 from pathlib import Path
 from datetime import datetime
 
-print("Enter the symbol(s) for the stocks:")
-print()
-
 if len(sys.argv) > 1:
     symbols = [i.upper() for i in sys.argv[1:]]
 else:
-    print("You didn't enter anything. Try running the program again.")
+    print("You didn't enter any symbols. Try running the program again.")
     sys.exit()
 
-print("Enter the address where you want to save the stock details:")
-print()
+print("\nEnter the address where you want to save the stock details (Note: Add quotations around the address):")
+
 i = 0
 while True:
-    address = Path(input().replace("\"", "").replace("\'", ""))
-    if address.is_file():
+    path = input()
+    address = Path(r"{}".format(path.replace("\"", "").replace("'", "")))
+    if os.path.isdir(address):
         break
     elif i == 3:
         print("Unfortunately you have reached the acceptable number of attempts. \nGoodbye.")
         sys.exit()
     else:
-        print("That address is incorrect. Try again.")
+        print(f"That address is incorrect. Try again. {address}")
         i += 1
 
 stocksFile = open(address / f"{datetime.today().strftime('%d_%m_%Y')}_stocks.txt", "w+")
-stocksFile.write("\t\t", datetime)
+stocksFile.write(f"\t\t{datetime}")
 stocksFile.write("\n\n")
 
 for symbol in symbols:
@@ -48,4 +46,4 @@ for symbol in symbols:
     os.remove(f"{symbol}.csv")
 
 stocksFile.close()
-print("Done.")
+print("\nDone.")
