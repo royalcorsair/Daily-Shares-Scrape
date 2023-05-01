@@ -41,12 +41,26 @@ for symbol in symbols:
         sort = bs4.BeautifulSoup(res.text, 'html.parser')
         csvLink = sort.select('a[class = "Fl(end) Mt(3px) Cur(p)"]')[0].get("href")
         csvRequest = requests.get(csvLink, headers=header)
-        csvFile = open(f"{symbol}.csv", "wb")
+        csvDownloadFile = open(f"{symbol}.csv", "wb")
         for chunk in csvRequest.iter_content(100000):
-            csvFile.write(chunk)
-        csvFile.close()
+            csvDownloadFile.write(chunk)
+        csvDownloadFile.close()
     except res.raise_for_status():
         print("*** HTTPError: Website request has failed. ***")
+    
+    csvFile = open(f"{symbol}.csv")
+    csvReader = csv.reader(csvFile)
+    csvData = list(csvReader)
+    for i in csvData[0]:
+        stocksFile.write(f"\t\t\t{i}")
+    stocksFile.write("\n")
+    for k in csvData[-1]:
+        stocksFile.write(f"\t\t\t{k}")
+    stocksFile.write("\n")
+
+    csvFile.close()
+    os.remove(f"{symbol}.csv")
+    
 
 stocksFile.close()
-print("\nDone.")
+print("Done.")
