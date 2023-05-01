@@ -2,10 +2,9 @@
 # dailyStocksScraper.py - Logs the data of any stock details after stock symbols entered 
 # into the command line
 
-import requests, sys, os
+import requests, sys, os, bs4, csv
 from pathlib import Path
-from datetime import datetime
-import yfinance as yf
+from datetime import datetime, date
 
 if len(sys.argv) > 1:
     symbols = [i.upper() for i in sys.argv[1:]]
@@ -29,15 +28,25 @@ while True:
         i += 1
 
 stocksFile = open(address / f"{datetime.today().strftime('%d_%m_%Y')}_stocks.txt", "w+")
-stocksFile.write(f"\t\tDate Accessed - {datetime}")
+stocksFile.write(f"\t\tDate Accessed - {datetime.today().strftime('%d_%m_%Y')}")
 stocksFile.write("\n\n")
 
-start_date = datetime(2023, 4, 26)
+start_date = datetime(2023, 4, 29)
 
 for symbol in symbols:
     stocksFile.write(f"{symbol} - \n")
-    data = yf.download(symbol, start=start_date)
-    stocksFile.write(f"{data}\n\n")
+    header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10136"}
+    res = requests.get(f"https://uk.finance.yahoo.com/quote/{symbol}/history?p=AAPL", headers=header)
+    try:
+        sort = bs4.BeautifulSoup(res.text, 'html.parser')
+        csvLink = sort.select('a[class = "Fl(end) Mt(3px) Cur(p)"]')[0].get("href")
+        csvRequest = requests.get(csvLink, headers=header)
+        csvFile = open(f"{symbol}.csv", "wb")
+        for chunk in csvRequest.iter_content(100000):
+            csvFile.write(chunk)
+        csvFile.close()
+    except res.raise_for_status():
+        print("*** HTTPError: Website request has failed. ***")
 
 stocksFile.close()
 print("\nDone.")
